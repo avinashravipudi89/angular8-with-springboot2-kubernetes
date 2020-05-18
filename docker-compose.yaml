@@ -1,0 +1,51 @@
+version: "3.0"
+
+volumes:
+  database:
+
+services:
+  frontend:
+    build:
+      context: ./angular8-app
+      args:
+        - buildtype=build-prod
+    labels:
+      - "traefik.backend=frontend"
+      - "traefik.frontend.rule=Host:192.168.117.12"
+    depends_on:
+      - backend
+      - database
+      - reverse-proxy
+  
+  backend:
+    build: ./springboot2-app
+    environment:
+      - DATABASE_HOSTNAME=database
+      - DATABASE_PORT=5432
+      - DATABASE_USERNAME=${DEMO_APP_DB_USERNAME}
+      - DATABASE_PASSWORD=${DEMO_APP_DB_PASSWORD}
+    labels:
+      - "traefik.backend=backend"
+      - "traefik.frontend.rule=Host:192.168.117.12"
+    links:
+      - database
+    
+  database:
+    image: postgres:10
+    labels:
+      - "traefik.enable=false"
+    environment:
+      - POSTGRES_USER=${DEMO_APP_DB_USERNAME}
+      - POSTGRES_PASSWORD=${DEMO_APP_DB_PASSWORD}
+    volumes:
+      - database:/var/lib/postgresql/data
+
+  reverse-proxy:
+    image: traefik:1.7.12
+    labels:
+      - "traefik.enable=false"
+    ports:
+      - 8085:80
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./traefik/traefik.toml:/traefik.toml
