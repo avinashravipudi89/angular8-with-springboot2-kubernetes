@@ -3,8 +3,8 @@ FROM node:12-alpine AS BUILDER
 WORKDIR /workdir
 
 # Dependencies
-COPY package.json /workdir/package.json
-COPY package-lock.json /workdir/package-lock.json
+COPY angular8-app/package.json /workdir/package.json
+COPY angular8-app/package-lock.json /workdir/package-lock.json
 RUN npm install
 
 ARG buildtype
